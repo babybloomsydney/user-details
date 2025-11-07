@@ -23,12 +23,9 @@
         .contact h2, .issues h2 { font-size: 11px; color: #1a3c6e; margin-bottom: 2px; }
         .issues ul { list-style: disc; padding-left: 12px; margin: 0; font-size: 10.5px; color: #28a745; }
         .issues li { margin-bottom: 1px; }
-
-        /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center; padding: 20px; }
         .modal img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; }
         .modal.active { display: flex; }
-
         @media (max-width: 600px) {
             .comparison { flex-direction: column; }
             .images img { max-height: 130px; }
@@ -80,7 +77,6 @@
         </div>
     </div>
 
-    <!-- Modal -->
     <div class="modal" id="modal">
         <img id="modalImg" alt="Enlarged">
     </div>
@@ -88,20 +84,17 @@
     <script>
         const params = new URLSearchParams(location.search);
         const encoded = params.get('data');
-        const contactId = params.get('id');
-
         let data = {};
         if (encoded) {
             try { data = JSON.parse(atob(encoded)); }
             catch(e) { alert('Invalid data'); }
         }
 
-        document.getElementById('contactId').textContent = data.contactId || '—';
+        const contactId = data.contactId || '—';
+        document.getElementById('contactId').textContent = contactId;
         document.getElementById('submitted').textContent = data.verificationSubmitTimestamp || '—';
-        const passportImg = document.getElementById('passportImg');
-        const idImg = document.getElementById('idImg');
-        passportImg.src = data.passportUrl || '';
-        idImg.src = data.idPhotoUrl || '';
+        document.getElementById('passportImg').src = data.passportUrl || '';
+        document.getElementById('idImg').src = data.idPhotoUrl || '';
         document.getElementById('surname').textContent = data.lastName || '—';
         document.getElementById('givenNames').textContent = data.firstName || '—';
         document.getElementById('dob').textContent = data.dob || '—';
@@ -127,15 +120,14 @@
             });
         } else {
             const li = document.createElement('li');
-            li.textContent = 'Verified ✓';
+            li.textContent = 'Verified';
             li.style.color = '#28a745';
             issuesList.appendChild(li);
         }
 
-        // Modal
         const modal = document.getElementById('modal');
         const modalImg = document.getElementById('modalImg');
-        [passportImg, idImg].forEach(img => {
+        [document.getElementById('passportImg'), document.getElementById('idImg')].forEach(img => {
             img.onclick = () => {
                 modalImg.src = img.src;
                 modal.classList.add('active');
