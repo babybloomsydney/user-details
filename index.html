@@ -9,6 +9,9 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8f9fa; padding: 6px; font-size: 12px; line-height: 1.3; }
         .header { text-align: center; margin-bottom: 6px; }
         h1 { font-size: 13px; color: #1a3c6e; }
+        .contact-id { font-size: 10px; color: #6c757d; margin-top: 2px; font-weight: 600; }
+        .nanny-link { font-size: 9px; margin-top: 1px; }
+        .nanny-link a { color: #007bff; text-decoration: underline; font-weight: 500; }
         .submitted { font-size: 9px; color: #6c757d; opacity: 0.7; margin-top: 1px; }
         .container { display: flex; flex-direction: column; height: 100vh; max-height: 100vh; overflow: hidden; }
         .images { display: flex; gap: 6px; margin-bottom: 6px; }
@@ -22,7 +25,7 @@
         .contact, .issues { background: #fff; padding: 4px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 6px; }
         .contact h2, .issues h2 { font-size: 11px; color: #1a3c6e; margin-bottom: 2px; }
         .issues ul { list-style: disc; padding-left: 12px; margin: 0; font-size: 10.5px; color: #28a745; }
-        .issues li { margin-bottom: 1px; }
+        .issues li { margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center; padding: 20px; }
         .modal img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; }
         .modal.active { display: flex; }
@@ -38,6 +41,8 @@
     <div class="container">
         <div class="header">
             <h1>My Profile</h1>
+            <div class="contact-id"><span id="contactId"></span></div>
+            <div class="nanny-link"><a id="nannyProfileLink" href="#" target="_blank">View Nanny Profile</a></div>
             <div class="submitted" id="submitted"></div>
         </div>
         <div class="images">
@@ -47,7 +52,7 @@
         <div class="comparison">
             <div class="col">
                 <h2>Personal Details</h2>
-                <div class="row"><label>Contact ID</label><span id="contactId"></span></div>
+                <!-- CONTACT ID REMOVED FROM HERE -->
                 <div class="row"><label>Surname</label><span id="surname"></span></div>
                 <div class="row"><label>Given Name(s)</label><span id="givenNames"></span></div>
                 <div class="row"><label>Date of Birth</label><span id="dob"></span></div>
@@ -82,16 +87,23 @@
     </div>
 
     <script>
+        // --- 1. DECODE URL PARAM (with URL decode) ---
         const params = new URLSearchParams(location.search);
         const encoded = params.get('data');
         let data = {};
         if (encoded) {
-            try { data = JSON.parse(atob(encoded)); }
-            catch(e) { alert('Invalid data'); }
+            try {
+                const decoded = decodeURIComponent(encoded);
+                data = JSON.parse(atob(decoded));
+            } catch (e) {
+                alert('Invalid data');
+            }
         }
 
+        // --- 2. POPULATE FIELDS (flat JSON) ---
         const contactId = data.contactId || '—';
         document.getElementById('contactId').textContent = contactId;
+        document.getElementById('nannyProfileLink').href = `https://babybloomsydney.com.au/nanny/${contactId}`;
         document.getElementById('submitted').textContent = data.verificationSubmitTimestamp || '—';
         document.getElementById('passportImg').src = data.passportUrl || '';
         document.getElementById('idImg').src = data.idPhotoUrl || '';
@@ -99,21 +111,24 @@
         document.getElementById('givenNames').textContent = data.firstName || '—';
         document.getElementById('dob').textContent = data.dob || '—';
         document.getElementById('nationality').textContent = data.nationality || '—';
-        document.getElementById('passportSurname').textContent = data.extracted?.surname || '—';
-        document.getElementById('passportGivenNames').textContent = data.extracted?.givenNames || '—';
-        document.getElementById('passportDob').textContent = data.extracted?.dob || '—';
-        document.getElementById('passportNationality').textContent = data.extracted?.nationality || '—';
-        document.getElementById('passportNumber').textContent = data.passportNumber || '—';
-        document.getElementById('passportExpiry').textContent = data.passportExpiry || '—';
+        document.getElementById('passportSurname').textContent = data.extractedSurname || '—';
+        document.getElementById('passportGivenNames').textContent = data.extractedGivenNames || '—';
+        document.getElementById('passportDob').textContent = data.extractedDob || '—';
+        document.getElementById('passportNationality').textContent = data.extractedNationality || '—';
+        document.getElementById('passportNumber').textContent = data.extractedPassportNumber || '—';
+        document.getElementById('passportExpiry').textContent = data.extractedPassportExpiry || '—';
         document.getElementById('email').textContent = data.email || '—';
         document.getElementById('phone').textContent = data.phoneNumber || '—';
         document.getElementById('addressLine1').textContent = data.addressLine1 || '—';
         document.getElementById('cityZip').textContent = (data.addressCity || '') + ' ' + (data.addressZip || '');
         document.getElementById('addressCountry').textContent = data.addressCountry || '—';
 
+        // --- 3. ISSUES (string) ---
         const issuesList = document.getElementById('issuesList');
-        if (data.issues && data.issues.length > 0) {
-            data.issues.forEach(issue => {
+        const issuesStr = data.issues || 'None';
+        const issues = issuesStr.split(',').map(i => i.trim()).filter(i => i);
+        if (issues.length > 0) {
+            issues.forEach(issue => {
                 const li = document.createElement('li');
                 li.textContent = issue;
                 issuesList.appendChild(li);
@@ -125,6 +140,7 @@
             issuesList.appendChild(li);
         }
 
+        // --- 4. MODAL ---
         const modal = document.getElementById('modal');
         const modalImg = document.getElementById('modalImg');
         [document.getElementById('passportImg'), document.getElementById('idImg')].forEach(img => {
